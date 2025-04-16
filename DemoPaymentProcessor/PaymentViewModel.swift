@@ -12,14 +12,14 @@ final class PaymentViewModel: ObservableObject {
     
     @Published var paymentMode: PaymentMode = .none
     @Published var showModes: Bool = false
+    @Published var message: String = ""
     
     private var paymentService: PaymentService?
     
-    func payment(amount: Double) {
-        print(paymentService?.pay(amount: amount) ?? "No payment done!")
-    }
-    
-    func selectMode() {
+    func selectMode(mode: PaymentMode) {
+        showModes = false
+        paymentMode = mode
+        
         switch paymentMode {
             case .paypal: paymentService = Paypal()
             case .stripe: paymentService = Stripe()
@@ -28,6 +28,14 @@ final class PaymentViewModel: ObservableObject {
             case .paytm: paymentService = PayTm()
             case .mock: paymentService = MockPay()
             default: break
+        }
+    }
+    
+    func pay(amount: Double) {
+        message = paymentService?.pay(amount: amount) ?? "No payment done!"
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            self.message = ""
         }
     }
 }

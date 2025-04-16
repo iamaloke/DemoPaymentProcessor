@@ -13,17 +13,43 @@ struct ContentView: View {
     
     var body: some View {
         GeometryReader { geo in
-            VStack {
+            VStack(spacing: 2) {
                 HStack {
-                    Text("Choose your payment mode:")
-                        .font(.system(size: 18, weight: .medium))
+                    Text("Choose payment mode:")
+                        .font(.system(size: 16, weight: .medium))
+                        .lineLimit(1)
                     
                     Spacer()
                     
-                    SelectPaymentModeView(modes: $viewModel.paymentMode, width: geo.size.width / 3)
-                        .overlay(alignment: .bottomTrailing) {
-                            Text("here")
+                    Button {
+                        viewModel.showModes.toggle()
+                    } label: {
+                        SelectPaymentModeView(viewModel: viewModel, width: geo.size.width / 3)
+                    }
+                    .buttonStyle(.plain)
+                }
+                
+                ZStack(alignment: .topTrailing) {
+                    VStack {
+                        Button {
+                            viewModel.pay(amount: 10)
+                        } label: {
+                            Text("Pay Now")
                         }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(viewModel.paymentMode == .none)
+                        
+                        Text(viewModel.message)
+                            .opacity(viewModel.message.isEmpty ? 0 : 1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 500)
+                    
+                    VStack {
+                        if viewModel.showModes {
+                            PaymentModeView(viewModel: viewModel, width: geo.size.width / 2)
+                        }
+                    }
                 }
             }
             .padding()
@@ -37,42 +63,73 @@ struct ContentView: View {
 
 struct SelectPaymentModeView: View {
     
-    @Binding var modes: PaymentMode
+    @ObservedObject var viewModel: PaymentViewModel
     
     var width: CGFloat
     var body: some View {
-        VStack {
-            HStack {
+        VStack(alignment: .trailing) {
+            VStack {
                 HStack {
-                    Spacer()
-                    
-                    Text(modes.rawValue)
-                    
-                    Spacer()
-                    
-                    Image(systemName: "arrowtriangle.down.fill")
-                        .font(.system(size: 16))
+                    HStack {
+                        Spacer()
+                        
+                        Text(viewModel.paymentMode.rawValue.capitalized)
+                            .font(.system(size: 16))
+                        
+                        Spacer()
+                        
+                        Image(systemName: "arrowtriangle.down.fill")
+                            .font(.system(size: 16))
+                    }
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 8)
                 }
-                .padding(.vertical, 8)
-                .padding(.horizontal, 8)
+                .background(.white)
+                .clipShape(.rect(cornerRadius: 6))
+                .padding(5)
             }
-            .background(.white)
-            .padding(4)
+            .background(.gray.opacity(0.3))
+            .clipShape(.rect(cornerRadius: 6))
         }
-        .background(.gray.opacity(0.5))
-        .clipShape(.rect(cornerRadius: 4))
-        .frame(width: width)
     }
 }
 
 struct PaymentModeView: View {
+    
+    @ObservedObject var viewModel: PaymentViewModel
+    var width: CGFloat
+    let modes = Array(PaymentMode.modes.enumerated())
+    
     var body: some View {
-        ForEach(PaymentMode.allCases, id: \.self) { mode in
-            HStack {
-                Text(mode.rawValue.capitalized)
-                
-                Spacer()
+        VStack {
+            VStack {
+                ForEach(modes, id: \.element) { (index, mode) in
+                    Button {
+                        viewModel.selectMode(mode: mode)
+                    } label: {
+                        VStack {
+                            HStack {
+                                Text(mode.rawValue.capitalized)
+                                
+                                Spacer()
+                            }
+                            
+                            if (modes.count - 1) != index {
+                                Divider()
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
+            .padding(.vertical, 10)
+            .background()
+            .clipShape(.rect(cornerRadius: 10))
         }
+        .padding(5)
+        .background(.gray.opacity(0.1))
+        .clipShape(.rect(cornerRadius: 10))
+        .frame(width: width)
     }
 }

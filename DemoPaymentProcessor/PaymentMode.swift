@@ -6,15 +6,19 @@
 //
 
 enum PaymentMode: String, Identifiable, CaseIterable {
+    case none = "Select"
     case paypal
     case stripe
     case phonepe
     case googlepay
     case paytm
     case mock
-    case none = "Select"
     
     var id: PaymentMode {
         self
+    }
+    
+    static var modes: [PaymentMode] {
+        allCases
     }
 }
